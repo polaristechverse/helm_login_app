@@ -41,7 +41,8 @@ microservices:
     image: "chaitanyamanikumar/mydb:v2"
     minReadySeconds: 60
     port: 5000
-    replicas: 2
+    nodePort: 31234
+    replicas: 4
     type: NodePort
     labels: pythonapp
     initContainers:

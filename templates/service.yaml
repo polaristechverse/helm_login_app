@@ -8,10 +8,13 @@ metadata:
 spec:
   selector:
     app: {{ .labels }}
+  {{- if .nodePort }}
   ports:
     - protocol: TCP
       port: {{ .port }}
       targetPort: {{ .port }}
+      nodePort: {{ .nodePort }}
+  {{- end }}
   type: {{ .type }}
 ---
 {{- end }}
