@@ -1,0 +1,17 @@
+{{- range .Values.microservices }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  labels:
+    app: {{ .labels }}
+spec:
+  selector:
+    app: {{ .labels }}
+  ports:
+    - protocol: TCP
+      port: {{ .port }}
+      targetPort: {{ .port }}
+  type: {{ .type }}
+---
+{{- end }}

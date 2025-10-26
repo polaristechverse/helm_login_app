@@ -1,0 +1,85 @@
+{{- range .Values.microservices }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .labels }}
+  name: {{ .name }}-deploy
+spec:
+  minReadySeconds: {{ .minReadySeconds }}
+  replicas: {{ .replicas }}
+  selector:
+    matchLabels:
+      app: {{ .labels }}
+  template:
+    metadata:
+      labels:
+        app: {{ .labels }}
+    spec:
+      {{- if .initContainers }}
+      initContainers:
+      {{- range .initContainers }}
+      - name: {{ .name }}
+        image: {{ .image }}
+        command:
+{{ toYaml .command | indent 10 }}
+        {{- if .env }}
+        env:
+        {{- range $key, $value := .env }}
+          - name: {{ $value.name }}
+            {{- if $value.value }}
+            value: {{ $value.value | quote }}
+            {{- else if $value.secretKeyRef }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ $value.secretKeyRef.name }}
+                key: {{ $value.secretKeyRef.key }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+      containers:
+      - image: {{ .image }}
+        name: {{ .name }}
+        {{- if .env }}
+        env:
+          {{- if .env.password }}
+          - name: {{ .env.password.name }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .env.password.secretKeyRef.name }}
+                key: {{ .env.password.secretKeyRef.key }}
+          {{- end }}
+          {{- if .env.db }}
+          - name: {{ .env.db.name }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ .env.db.secretKeyRef.name }}
+                key: {{ .env.db.secretKeyRef.key }}
+          {{- end }}
+          {{- if .env.db_host }}
+          - name: {{ .env.db_host.name }}
+            value: {{ .env.db_host.value | quote }}
+          {{- end }}
+          {{- if .env.db_user }}
+          - name: {{ .env.db_user.name }}
+            value: {{ .env.db_user.value | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if .resources }}
+        resources:
+{{ toYaml .resources | indent 10 }}
+        {{- end }}
+        {{- if .volumemounts }}
+        volumeMounts:
+          - name: {{ .volumes.name }}
+            mountPath: {{ .volumemounts.mountPath }}
+        {{- end }}
+      {{- if .volumes }}
+      volumes:
+      - name: {{ .volumes.name }}
+        emptyDir: {}
+       {{- end }}
+---
+{{- end }}
